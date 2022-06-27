@@ -1,0 +1,53 @@
+     class  client (nc: string) (dc: int) (co: float*float) =
+  object
+    val nom = nc
+    val demande = dc
+    val coordonnees = co
+    val mutable distance = 0.0
+    method get_nom = nom
+    method get_demande = demande
+    method get_coordonnees = coordonnees
+    method get_distance = distance
+    method set_distance (d: float) = distance <- d
+  end
+   
+     (* Classe itineraire *)
+  class itineraire =
+  let num = ref 1 in
+    fun (c : int) ->
+  object(self)
+    val numero = !num
+    val capacite = c
+    val mutable demande_totale = 0
+    val mutable distance_totale = 0.0
+    val mutable liste_clients : client list = []
+    method get_numero = numero
+    method get_capacite = capacite
+    method get_demande_totale = demande_totale
+    method get_distance_totale = distance_totale
+    method get_liste_clients = liste_clients
+    method set_demande_totale (d: int) = demande_totale <- d
+    method set_distance_totale (dis: float) = distance_totale <- dis
+    method set_liste_clients  (l: client list) = liste_clients <- l
+    initializer
+      num := !num + 1
+   
+   
+   (* -- À IMPLANTER (10 PTS) ------------------------------------------*)
+   (* @Méthode : ajouter_client : client -> bool -> unit                *)
+   (* @Description : Ajoute un client dans l'itinéraire                 *)
+   (* @Exception: Lance l'exception Failure si le client existe déjà    *)
+   (* @Exception: Lance l'exception Failure si la capacité de           *)
+   (*             l'itinéraire ne permet pas d'ajouter le client.       *)
+
+    method ajouter_client (c: client) (b: bool) =
+    	let total, capacite, coord = c#get_demande + self#get_demande_totale, self#get_capacite, c#get_coordonnees in
+    	if (demandeTot > capacite) then failwith "Capacite insuffisante."
+    	else let calculer_distance (c1: float*float) (c2: float*float) = 
+  		sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0) in
+  		c#set_distance calculer_distance ; self#set_distance_totale total; 
+  		
+  		
+    	
+    	
+

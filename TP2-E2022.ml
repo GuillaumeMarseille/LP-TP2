@@ -57,12 +57,24 @@ module Tp2e22 : TP2E22 = struct
 
     (* Méthodes à implanter *)
 
+    (*methode prive pour retourner les coords du dernier client de la liste*)
+    method private coord_dernier_client =
+      let l = rev self#get_liste_clients in
+      let c = hd l in
+      c#get_coordonnees
+
    (* -- À IMPLANTER (3 PTS) -------------------------------------------*)
    (* @Méthode : client_existe : string -> bool                         *)
    (* @Description : Détermine si un client existe dans l'itinéraire    *)
 
     method client_existe (nomc: string) =
-		true
+       (*definition de fonction recursive*)
+      let rec rec_client_existe (n: string) (l: client list) =
+        match l with
+                |[] -> false
+                |e::r -> (n = e#get_nom) || rec_client_existe n r in
+       (*appel de la fonction recursive avec les bon parametres*)
+      rec_client_existe nomc (self#get_liste_clients)
 
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : retourner_client : string -> client                    *)
@@ -70,7 +82,14 @@ module Tp2e22 : TP2E22 = struct
    (* @Exception: Lance l'exception Failure si le client n'existe pas   *)
 
     method retourner_client (nomc: string) =
-		new client "" 0 (0.0, 0.0)
+             (*definition de fonction recursive*)
+      let rec rec_retourner_client (n: string) (l: client list) =
+        match l with
+                |[] -> failwith "Ce client n'existe pas."
+                |e::r -> if (e#get_nom = n) then e else rec_retourner_client n r in
+       (*appel de la fonction recursive avec les bon parametres*)
+      rec_retourner_client nomc (self#get_liste_clients)
+      
 
    (* -- À IMPLANTER (10 PTS) ------------------------------------------*)
    (* @Méthode : ajouter_client : client -> bool -> unit                *)
@@ -80,8 +99,22 @@ module Tp2e22 : TP2E22 = struct
    (*             l'itinéraire ne permet pas d'ajouter le client.       *)
 
     method ajouter_client (c: client) (b: bool) =
-		()
-
+      (*initialisation des variables necessaires*)
+      let totalDem, capacite, coord, lc = c#get_demande + self#get_demande_totale,
+                                          self#get_capacite, c#get_coordonnees, self#get_liste_clients in
+      (*gestion des erreurs*)
+    	if (totalDem > capacite) then failwith "La capacité de cet itinéraire ne permet pas d'ajouter ce client."
+    	else if (self#client_existe c#get_nom) then failwith "Ce client existe déjà."
+      (*mise a jours des distances et demandes + fonction de calcul de distance*)
+    	else let calculer_distance (c1: float*float) (c2: float*float) = 
+  		sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0) in
+  		c#set_distance (calculer_distance coord (0.0,0.0)); 
+  		self#set_demande_totale totalDem; 
+  		if (b || length lc = 0) then self#set_distance_totale (self#get_distance_totale +. c#get_distance)
+  		else self#set_distance_totale (self#get_distance_totale +.
+                                                 calculer_distance coord (self#coord_dernier_client));
+                (*ajout du client a la liste*)
+  		let l = lc@[c] in self#set_liste_clients l
    (* -- À IMPLANTER (8 PTS) -------------------------------------------*)
    (* @Méthode : supprimer_client : string -> unit                      *)
    (* @Description : Supprime un client d'un itinéraire                 *)
