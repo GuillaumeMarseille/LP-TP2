@@ -31,23 +31,45 @@
     method set_liste_clients  (l: client list) = liste_clients <- l
     initializer
       num := !num + 1
-   
-   
-   (* -- À IMPLANTER (10 PTS) ------------------------------------------*)
-   (* @Méthode : ajouter_client : client -> bool -> unit                *)
-   (* @Description : Ajoute un client dans l'itinéraire                 *)
-   (* @Exception: Lance l'exception Failure si le client existe déjà    *)
-   (* @Exception: Lance l'exception Failure si la capacité de           *)
-   (*             l'itinéraire ne permet pas d'ajouter le client.       *)
+  
 
-    method ajouter_client (c: client) (b: bool) =
-    	let total, capacite, coord = c#get_demande + self#get_demande_totale, self#get_capacite, c#get_coordonnees in
-    	if (demandeTot > capacite) then failwith "Capacite insuffisante."
-    	else let calculer_distance (c1: float*float) (c2: float*float) = 
-  		sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0) in
-  		c#set_distance calculer_distance ; self#set_distance_totale total; 
-  		
-  		
-    	
-    	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
 

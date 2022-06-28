@@ -63,6 +63,17 @@ module Tp2e22 : TP2E22 = struct
       let c = hd l in
       c#get_coordonnees
 
+    (*methode pour calculer distance entre 2 coords*)
+    method private calculer_distance (c1: float*float) (c2: float*float) =
+      sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0)
+
+    (*methode pour mettre a jours la distance des elements dans une liste*)
+    method private maj_distance_clients l = 
+	let prev = ref (0.0, 0.0) in
+	iter (fun c -> c#set_distance (self#calculer_distance c#get_coordonnees !prev); prev := c#get_coordonnees) l
+
+
+
    (* -- À IMPLANTER (3 PTS) -------------------------------------------*)
    (* @Méthode : client_existe : string -> bool                         *)
    (* @Description : Détermine si un client existe dans l'itinéraire    *)
@@ -97,7 +108,6 @@ module Tp2e22 : TP2E22 = struct
    (* @Exception: Lance l'exception Failure si le client existe déjà    *)
    (* @Exception: Lance l'exception Failure si la capacité de           *)
    (*             l'itinéraire ne permet pas d'ajouter le client.       *)
-
     method ajouter_client (c: client) (b: bool) =
       (*initialisation des variables necessaires*)
       let totalDem, capacite, coord, lc = c#get_demande + self#get_demande_totale,
@@ -106,22 +116,32 @@ module Tp2e22 : TP2E22 = struct
     	if (totalDem > capacite) then failwith "La capacité de cet itinéraire ne permet pas d'ajouter ce client."
     	else if (self#client_existe c#get_nom) then failwith "Ce client existe déjà."
       (*mise a jours des distances et demandes + fonction de calcul de distance*)
-    	else let calculer_distance (c1: float*float) (c2: float*float) = 
-  		sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0) in
-  		c#set_distance (calculer_distance coord (0.0,0.0)); 
-  		self#set_demande_totale totalDem; 
-  		if (b || length lc = 0) then self#set_distance_totale (self#get_distance_totale +. c#get_distance)
-  		else self#set_distance_totale (self#get_distance_totale +.
-                                                 calculer_distance coord (self#coord_dernier_client));
+    	else	self#set_demande_totale totalDem; 
+  		if (length lc = 0) then c#set_distance (self#calculer_distance coord (0.0,0.0))
+  	        else c#set_distance (self#calculer_distance coord self#coord_dernier_client);
+                self#set_distance_totale (self#get_distance_totale +. c#get_distance);
+                if (b) then self#set_distance_totale (self#get_distance_totale +. self#calculer_distance coord (0.0,0.0));
                 (*ajout du client a la liste*)
   		let l = lc@[c] in self#set_liste_clients l
+                                       
    (* -- À IMPLANTER (8 PTS) -------------------------------------------*)
    (* @Méthode : supprimer_client : string -> unit                      *)
    (* @Description : Supprime un client d'un itinéraire                 *)
    (* @Exception: Lance l'exception Failure si le client n'existe pas   *)
 
     method supprimer_client (nomc: string) =
-		()
+      (*on recupere le client + gere la potentielle erreur*)
+      let c = self#retourner_client (nomc) in
+          (*mise a jours de demande*)
+          self#set_distance_totale (self#get_distance_totale -. c#get_distance);
+      (*supression du client*)
+      let l = filter (fun x -> ( x#get_nom <> nomc)) self#get_liste_clients in 
+      self#set_liste_clients l;
+      (*mise a jours des distances des clients*)
+      self#maj_distance_clients l;
+      (*calcul du nouveau total*)
+      let fl = map (fun c -> c#get_distance) l in 
+      self#set_distance_totale ((fold_right ( +. ) fl 0.) +. self#calculer_distance self#coord_dernier_client (0.0,0.0))
 
    (* -- À IMPLANTER (5 PTS) ----------------------------------------------------------*)
    (* @Méthode : ajouter_clients: (string * int * (float * float) * bool) list -> unit *)
@@ -129,18 +149,27 @@ module Tp2e22 : TP2E22 = struct
    (*				 les informations reçues                               *)
 
     method ajouter_clients (ilc: (string * int * (float * float) * bool) list) =
-		()
+    	let rec rec_ajouter_client (lnc: (string * int * (float * float) * bool) list) (lc: client list)  = 
+    	match lnc with
+    	|[] -> ()
+    	|e::r -> let (nom, demande, coord, dernier) = e in
+    	    let c = new client nom demande coord in
+    	   self#ajouter_client c dernier;
+    	    rec_ajouter_client r lc in
+    	    rec_ajouter_client ilc self#get_liste_clients
 
    (* -- À IMPLANTER (5 PTS) ----------------------------------*)
    (* @Méthode : afficher_itineraire : unit                    *)
    (* @Description : Affiche les informations de l'itinéraire  *)
 
-    method afficher_itineraire =
-		()
+    method afficher_itineraire = 
+        let ln = map (fun c -> c#get_nom) self#get_liste_clients in
+        let noms = String.concat " " ln in
+        Printf.printf "DemandeTotale: %d; DistanceTotale: %F; Clients: %s \n" self#get_demande_totale self#get_distance_totale noms
 
   end
 
-  (* Classe plan *)
+  (* Classe plan *) 
   class plan (sp: string) =
   object
     val sorte_plan : string = sp
