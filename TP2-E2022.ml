@@ -150,11 +150,13 @@ module Tp2e22 : TP2E22 = struct
 
     method ajouter_clients (ilc: (string * int * (float * float) * bool) list) =
     	let rec rec_ajouter_client (lnc: (string * int * (float * float) * bool) list) (lc: client list)  = 
-    	match lnc with
-    	|[] -> ()
-    	|e::r -> let (nom, demande, coord, dernier) = e in
+    	  match lnc with
+          (*on retourne unit si la liste est vide*)
+    	  |[] -> ()
+          (*sinon on cree un client, l'ajoute a la liste et rappel recusivement*)
+    	  |e::r -> let (nom, demande, coord, dernier) = e in
     	    let c = new client nom demande coord in
-    	   self#ajouter_client c dernier;
+    	    self#ajouter_client c dernier;
     	    rec_ajouter_client r lc in
     	    rec_ajouter_client ilc self#get_liste_clients
 
@@ -162,10 +164,13 @@ module Tp2e22 : TP2E22 = struct
    (* @Méthode : afficher_itineraire : unit                    *)
    (* @Description : Affiche les informations de l'itinéraire  *)
 
-    method afficher_itineraire = 
-        let ln = map (fun c -> c#get_nom) self#get_liste_clients in
-        let noms = String.concat " " ln in
-        Printf.printf "DemandeTotale: %d; DistanceTotale: %F; Clients: %s \n" self#get_demande_totale self#get_distance_totale noms
+    method afficher_itineraire =
+      (*on va chercher le nom de tous les client et les mets dans une liste*)
+      let ln = map (fun c -> c#get_nom) self#get_liste_clients in
+      (*on transforme cette liste en string*)
+      let noms = String.concat " " ln in
+      (*on print la string formatee*)
+      Printf.printf "DemandeTotale: %d; DistanceTotale: %F; Clients: %s \n" self#get_demande_totale self#get_distance_totale noms
 
   end
 
