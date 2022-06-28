@@ -31,25 +31,25 @@
     method set_liste_clients  (l: client list) = liste_clients <- l
     initializer
       num := !num + 1
-  
 
+  (* Classe plan *) 
+  class plan (sp: string) =
+  object
+    val sorte_plan : string = sp
+    method get_sorte_plan = sorte_plan
+  end
 
+  (* Classe plan_distribution *)
+  class plan_distribution (sp: string) (np: string) =
+  object(self)
+    inherit plan sp as parent
+    val nom_plan : string = np
+    val mutable liste_itineraires : itineraire list = []
+    method get_nom_plan = nom_plan
+    method get_liste_itineraires = liste_itineraires
+    method set_liste_itineraires (l : itineraire list) = liste_itineraires <- l
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	val iter2 : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
 
 
 

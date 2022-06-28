@@ -198,36 +198,42 @@ module Tp2e22 : TP2E22 = struct
    (* @Description : Détermine si un itinéraire existe dans le plan     *)
 
     method itineraire_existe (indice: int) =
-		true
+      (*on utilise exists pour verifier si l'itineraire se trouve dans la liste*)
+      exists (fun i -> i#get_numero = indice) self#get_liste_itineraires
 
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : ajouter_itineraire: itineraire -> unit                 *)
    (* @Description : Ajoute un intinéraire dans le plan                 *)
    (* @Exception: Lance l'exception Failure si l'itinéraire existe déjà *)
 
-    method  ajouter_itineraire (i: itineraire) =
-		()
-
+    method ajouter_itineraire (i: itineraire) =
+      (*lance erreur si l'itineraire est deja dans la liste d'itineraires*)
+      if (self#itineraire_existe i#get_numero) then failwith "L'itineraire existe déja."
+      (*sinon ajoute l'itineraire a la liste*)
+      else self#set_liste_itineraires ((self#get_liste_itineraires)@[i])
+    
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : retourner_liste_clients: client list                   *)
    (* @Description : Retourne la liste de tous les clients du plan      *)
 
     method retourner_liste_clients =
-		[new client "" 0 (0.0, 0.0)]
+      concat_map (fun i -> i#get_liste_clients) self#get_liste_itineraires
 
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : client_existe : string -> bool                         *)
    (* @Description : Détermine si un client existe dans le plan         *)
 
     method client_existe (nomc: string) =
-		true
+      exists (fun c -> c#get_nom= nomc) self#retourner_liste_clients
 
    (* -- À IMPLANTER (5 PTS) ---------------------------------------------------------------------------*)
    (* @Méthode : ajouter_itineraires: int list -> (string * int (float*float) * bool) list list -> unit *)
-   (* @Description : Ajoute plusieurs itinéraires dans le plan selon les informations reçues            *)
+    (* @Description : Ajoute plusieurs itinéraires dans le plan selon les informations reçues            *)
 
     method ajouter_itineraires (lcap: int list) (lilc: (string * int * (float*float) * bool) list list) =
-		()
+      List.iter2 (fun c lc -> let it = new itineraire c in
+                              it#ajouter_clients lc;
+                  self#ajouter_itineraire it) lcap lilc
 
    (* -- À IMPLANTER (6 PTS) ------------------------------------------------------*)
    (* @Méthode : retourner_ICRE: (int * int)                                       *)
