@@ -48,26 +48,20 @@
     method get_nom_plan = nom_plan
     method get_liste_itineraires = liste_itineraires
     method set_liste_itineraires (l : itineraire list) = liste_itineraires <- l
+-------------------------------------------------------------------
+   (* -- À IMPLANTER (4 PTS) --------------------------------------------*)
+   (* @Méthode : retourner_itineraire : int -> itineraire                *)
+   (* @Description : Retourne l'itinéraire se trouvant dans le plan      *)
+   (* @Exception: Lance l'exception Failure si l'itinéraire n'existe pas *)
 
-	val iter2 : ('a -> 'b -> unit) -> 'a list -> 'b list -> unit
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
+    method retourner_itineraire (indice: int) =
+             (*definition de fonction recursive*)
+      let rec rec_retourner_itineraire (n: int) (l: itineraire list) =
+        match l with
+                |[] -> failwith "Cet itineraire n'existe pas."
+                |e::r -> if (e#get_numero = n) then e else rec_retourner_client n r in
+       (*appel de la fonction recursive avec les bon parametres*)
+      rec_retourner_itineraire indice (self#get_liste_itineraires)
 
 
 

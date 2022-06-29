@@ -217,7 +217,8 @@ module Tp2e22 : TP2E22 = struct
    (* @Description : Retourne la liste de tous les clients du plan      *)
 
     method retourner_liste_clients =
-      concat_map (fun i -> i#get_liste_clients) self#get_liste_itineraires
+      (*equivalent de concat_map, mais n'est pas supporte dans version 4.08*)
+      List.concat (map (fun i -> i#get_liste_clients) self#get_liste_itineraires)
 
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : client_existe : string -> bool                         *)
@@ -231,8 +232,7 @@ module Tp2e22 : TP2E22 = struct
     (* @Description : Ajoute plusieurs itinéraires dans le plan selon les informations reçues            *)
 
     method ajouter_itineraires (lcap: int list) (lilc: (string * int * (float*float) * bool) list list) =
-      List.iter2 (fun c lc -> let it = new itineraire c in
-                              it#ajouter_clients lc;
+      List.iter2 (fun c lc -> let it = new itineraire c in it#ajouter_clients lc;
                   self#ajouter_itineraire it) lcap lilc
 
    (* -- À IMPLANTER (6 PTS) ------------------------------------------------------*)
@@ -241,8 +241,12 @@ module Tp2e22 : TP2E22 = struct
    (*                l’itinéraire ayant cette capacité la plus élevée dans le plan *)
    (* @Exception: Lance l'exception Failure si le plan est vide                    *)
 
-    method retourner_ICRE =
-		(0,0)
+    method retourner_ICRE = let l = self#get_liste_itineraires in match l with
+    	|[] -> failwith "Le plan est vide."
+    	|e::r -> let lp = map (fun i -> (i#get_numero, (i#get_capacite - i#get_demande_totale))) l in
+	                let compi i1 i2 = if (snd i1 = snd i2) then 0 else 
+	                (if (snd i1 < snd i2) then 1 else -1) in
+	                hd (sort compi lp)
 
    (* -- À IMPLANTER (4 PTS) -------------------------------------------*)
    (* @Méthode : retourner_client : string -> client                    *)
@@ -250,7 +254,13 @@ module Tp2e22 : TP2E22 = struct
    (* @Exception: Lance l'exception Failure si le client n'existe pas   *)
 
     method retourner_client (nomc: string) =
-		new client "" 0 (0.0, 0.0)
+             (*definition de fonction recursive*)
+      let rec rec_retourner_client (n: string) (l: client list) =
+        match l with
+                |[] -> failwith "Ce client n'existe pas."
+                |e::r -> if (e#get_nom = n) then e else rec_retourner_client n r in
+       (*appel de la fonction recursive avec les bon parametres*)
+      rec_retourner_client nomc (self#retourner_liste_clients)
 
    (* -- À IMPLANTER (4 PTS) --------------------------------------------*)
    (* @Méthode : retourner_itineraire : int -> itineraire                *)
@@ -258,7 +268,13 @@ module Tp2e22 : TP2E22 = struct
    (* @Exception: Lance l'exception Failure si l'itinéraire n'existe pas *)
 
     method retourner_itineraire (indice: int) =
-		new itineraire 0
+             (*definition de fonction recursive*)
+      let rec rec_retourner_itineraire (n: int) (l: itineraire list) =
+        match l with
+                |[] -> failwith "L'itinéraire n'existe pas."
+                |e::r -> if (e#get_numero = n) then e else rec_retourner_itineraire n r in
+       (*appel de la fonction recursive avec les bon parametres*)
+      rec_retourner_itineraire indice (self#get_liste_itineraires)
 
    (* -- À IMPLANTER (3 PTS) ------------------------------------------*)
    (* @Méthode : calculer_distance_totale : float                      *)
