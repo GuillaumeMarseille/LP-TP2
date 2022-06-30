@@ -283,7 +283,10 @@ module Tp2e22 : TP2E22 = struct
    (*				 itinéraires appartenant au plan       *)
 
     method calculer_distance_totale =
-		0.0
+    	let rec rec_calculer_distance_totale (l: itineraire list) (t: float) = match l with 
+    	|[] -> t
+    	|e::r -> rec_calculer_distance_totale r (t +. e#get_distance_totale)
+    	in rec_calculer_distance_totale self#get_liste_itineraires 0.
 
    (* -- À IMPLANTER (6 PTS) --------------------------------------------------*)
    (* @Méthode : afficher_plan_distribution1: unit                             *)
@@ -291,7 +294,14 @@ module Tp2e22 : TP2E22 = struct
    (* @Exception: Lance l'exception Failure si le plan est vide                *)
 
     method afficher_plan_distribution1 =
-		()
+      	Printf.printf "Nom du plan: %s\n" self#get_nom_plan;
+      	Printf.printf "Nombre des itineraires: %d\n" (length self#get_liste_itineraires);
+      	Printf.printf "Nombre des clients: %d\n" (length self#retourner_liste_clients);
+      	print_endline "Liste des itineraires: ";
+    	let rec rec_afficher_itineraires (l: itineraire list) = match l with
+    	|[] -> ()
+    	|e::r -> Printf.printf "it %d: " e#get_numero; e#afficher_itineraire; rec_afficher_itineraires r
+    	in rec_afficher_itineraires self#get_liste_itineraires
 
    (* -- À IMPLANTER (12 PTS) -------------------------------------------------*)
    (* @Méthode : afficher_plan_distribution2: string -> string -> unit         *)

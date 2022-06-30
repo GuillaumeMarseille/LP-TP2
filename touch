@@ -49,21 +49,40 @@
     method get_liste_itineraires = liste_itineraires
     method set_liste_itineraires (l : itineraire list) = liste_itineraires <- l
 -------------------------------------------------------------------
-   (* -- À IMPLANTER (4 PTS) --------------------------------------------*)
-   (* @Méthode : retourner_itineraire : int -> itineraire                *)
-   (* @Description : Retourne l'itinéraire se trouvant dans le plan      *)
-   (* @Exception: Lance l'exception Failure si l'itinéraire n'existe pas *)
 
-    method retourner_itineraire (indice: int) =
-             (*definition de fonction recursive*)
-      let rec rec_retourner_itineraire (n: int) (l: itineraire list) =
-        match l with
-                |[] -> failwith "Cet itineraire n'existe pas."
-                |e::r -> if (e#get_numero = n) then e else rec_retourner_client n r in
-       (*appel de la fonction recursive avec les bon parametres*)
-      rec_retourner_itineraire indice (self#get_liste_itineraires)
+      Printf.printf "DemandeTotale: %d; DistanceTotale: %F; Clients: %s \n" self#get_demande_totale self#get_distance_totale noms
+   (* -- À IMPLANTER (6 PTS) --------------------------------------------------*)
+   (* @Méthode : afficher_plan_distribution1: unit                             *)
+   (* @Description : Affiche le plan dans l’interpréteur d’Ocaml (voir énoncé) *)
+   (* @Exception: Lance l'exception Failure si le plan est vide                *)
 
-
+    method afficher_plan_distribution1 =
+      	Printf.printf "Nom du plan: %s\n" self#get_nom_plan;
+      	Printf.printf "Nombre des itineraires: %d\n" length self#get_liste_itineraires;
+      	Printf.printf "Nombre des clients: %d\n" length self#retourner_liste_clients
+      	print_endline "Liste des itineraires: "
+    	let rec rec_afficher_itineraires (l: itineraire list) = match l with
+    	|[] -> ()
+    	|e::r -> Printf.printf "it %d: " e#get_numero; e#afficher_itineraire; rec_afficher_itineraires r
+    	in rec_afficher_itineraires self#get_liste_itineraires
+    	
+    methode private compter_clients = let rec rec_compter_clients l n =
+    	match l with
+    	|[] -> n
+    	|e::r -> rec_compter_clients r (n + (length e#gretourner_liste_clients)) in
+    	rec_compter_clients self#get_liste_itineraires 0
+    	
+    	(* Résultat:
+Nom du plan: Transport marchandise
+Nombre des itineraires: 4
+Nombre des clients: 23
+Liste des itineraires:
+it 1: DemandeTotale: 51; DistanceTotale: 198.160779731; Clients: c7 c14 c22 c3 c11 c23
+it 2: DemandeTotale: 49; DistanceTotale: 169.045003635; Clients: c13 c1 c2 c10 c20 c19
+it 3: DemandeTotale: 44; DistanceTotale: 158.329072921; Clients: c4 c18 c8 c16
+it 4: DemandeTotale: 47; DistanceTotale: 206.558036463; Clients: c6 c12 c17 c21 c5 c15 c9
+- : unit = ()
+*)
 
 
 
