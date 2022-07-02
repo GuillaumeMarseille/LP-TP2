@@ -83,7 +83,9 @@ module Tp2e22 : TP2E22
 
 (* On ouvre le modules disposant de fonctions pertinentes pour nos tests *)
 open Tp2e22;;
+
 (* On exécute maintenant les fonctions une à une *)
+
 let c1= new client "c7" 10 (23.5, 15.9);;
 
 (* Résultat:

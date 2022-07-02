@@ -72,8 +72,6 @@ module Tp2e22 : TP2E22 = struct
 	let prev = ref (0.0, 0.0) in
 	iter (fun c -> c#set_distance (self#calculer_distance c#get_coordonnees !prev); prev := c#get_coordonnees) l
 
-
-
    (* -- À IMPLANTER (3 PTS) -------------------------------------------*)
    (* @Méthode : client_existe : string -> bool                         *)
    (* @Description : Détermine si un client existe dans l'itinéraire    *)
@@ -132,8 +130,8 @@ module Tp2e22 : TP2E22 = struct
     method supprimer_client (nomc: string) =
       (*on recupere le client + gere la potentielle erreur*)
       let c = self#retourner_client (nomc) in
-          (*mise a jours de demande*)
-          self#set_distance_totale (self#get_distance_totale -. c#get_distance);
+      (*mise a jours de demande*)
+      self#set_demande_totale (self#get_demande_totale - c#get_demande);
       (*supression du client*)
       let l = filter (fun x -> ( x#get_nom <> nomc)) self#get_liste_clients in 
       self#set_liste_clients l;
@@ -192,7 +190,23 @@ module Tp2e22 : TP2E22 = struct
     method set_liste_itineraires (l : itineraire list) = liste_itineraires <- l
 
     (* Méthodes à implanter *)
-
+ 
+    (*methode pour calculer distance entre 2 coords*)
+    method private calculer_distance (c1: float*float) (c2: float*float) =
+      sqrt ((fst c2 -. fst c1)**2.0 +. (snd c2 -. snd c1)**2.0)
+    
+    (*methode qui retourne une string correspondant au format du fichier plan.dot pour un itineraire*)
+    method private fichier_itineraire lc=
+      (*references a destination et dis_entrepot (utilise pour dernier client de la liste)*)
+        let destination, dis_entrepot = ref "Entrepot", ref 0. in
+        let rec rec_fichier_itineraire (l: client list) (s:string) = match l with
+        |[] -> s ^  (Printf.sprintf "%s -> Entrepot [label=\"%F\"];\n" !destination ! dis_entrepot)
+        |e::r -> let depart = !destination in
+             if (length l = 1) then dis_entrepot := self#calculer_distance e#get_coordonnees (0.0,0.0);
+             destination := e#get_nom;
+             rec_fichier_itineraire r (s ^ (Printf.sprintf "%s -> %s [label=\"%F\"];\n" depart !destination e#get_distance))
+             in rec_fichier_itineraire lc ""
+    
    (* -- À IMPLANTER (3 PTS) -------------------------------------------*)
    (* @Méthode : itineraire_existe: int -> bool                         *)
    (* @Description : Détermine si un itinéraire existe dans le plan     *)
@@ -225,6 +239,7 @@ module Tp2e22 : TP2E22 = struct
    (* @Description : Détermine si un client existe dans le plan         *)
 
     method client_existe (nomc: string) =
+      (*encore une fois, on utilise exists pour deterrminer si un client se trouve dans le plan*)
       exists (fun c -> c#get_nom= nomc) self#retourner_liste_clients
 
    (* -- À IMPLANTER (5 PTS) ---------------------------------------------------------------------------*)
@@ -232,6 +247,8 @@ module Tp2e22 : TP2E22 = struct
     (* @Description : Ajoute plusieurs itinéraires dans le plan selon les informations reçues            *)
 
     method ajouter_itineraires (lcap: int list) (lilc: (string * int * (float*float) * bool) list list) =
+      (*on utilise iter2 pour iterer sur lcap et lilc en meme temps, ce qui nous permet de cree des itineraires
+       et ensuite on les ajoutes a notre plan.*)
       List.iter2 (fun c lc -> let it = new itineraire c in it#ajouter_clients lc;
                   self#ajouter_itineraire it) lcap lilc
 
@@ -241,6 +258,8 @@ module Tp2e22 : TP2E22 = struct
    (*                l’itinéraire ayant cette capacité la plus élevée dans le plan *)
    (* @Exception: Lance l'exception Failure si le plan est vide                    *)
 
+    (*retourne erreur si plan vide, sinon calcul la capacite residuelle de chaque itineraire
+     avec map et retourne celui qui a la plus grande capacite a l'aide  de sort et compi*)
     method retourner_ICRE = let l = self#get_liste_itineraires in match l with
     	|[] -> failwith "Le plan est vide."
     	|e::r -> let lp = map (fun i -> (i#get_numero, (i#get_capacite - i#get_demande_totale))) l in
@@ -257,6 +276,7 @@ module Tp2e22 : TP2E22 = struct
              (*definition de fonction recursive*)
       let rec rec_retourner_client (n: string) (l: client list) =
         match l with
+        (*lance erruer si client n'existe pas*)
                 |[] -> failwith "Ce client n'existe pas."
                 |e::r -> if (e#get_nom = n) then e else rec_retourner_client n r in
        (*appel de la fonction recursive avec les bon parametres*)
@@ -271,6 +291,7 @@ module Tp2e22 : TP2E22 = struct
              (*definition de fonction recursive*)
       let rec rec_retourner_itineraire (n: int) (l: itineraire list) =
         match l with
+        (*lance erreur si itineraire n'existe pas*)
                 |[] -> failwith "L'itinéraire n'existe pas."
                 |e::r -> if (e#get_numero = n) then e else rec_retourner_itineraire n r in
        (*appel de la fonction recursive avec les bon parametres*)
@@ -282,6 +303,7 @@ module Tp2e22 : TP2E22 = struct
    (*                faisant la somme de toutes les distances des      *)
    (*				 itinéraires appartenant au plan       *)
 
+    (*additionne la distance totale de chaque itineraires du plan et retourne la somme*)
     method calculer_distance_totale =
     	let rec rec_calculer_distance_totale (l: itineraire list) (t: float) = match l with 
     	|[] -> t
@@ -293,11 +315,14 @@ module Tp2e22 : TP2E22 = struct
    (* @Description : Affiche le plan dans l’interpréteur d’Ocaml (voir énoncé) *)
    (* @Exception: Lance l'exception Failure si le plan est vide                *)
 
+    (*lance erreur si plan est vide, sinon affiche le plan selon de format voulu*)
     method afficher_plan_distribution1 =
+      if (self#get_liste_itineraires = []) then failwith "Le plan est vide.";
       	Printf.printf "Nom du plan: %s\n" self#get_nom_plan;
       	Printf.printf "Nombre des itineraires: %d\n" (length self#get_liste_itineraires);
       	Printf.printf "Nombre des clients: %d\n" (length self#retourner_liste_clients);
       	print_endline "Liste des itineraires: ";
+        (*on affiche chaque itineraires un par un*)
     	let rec rec_afficher_itineraires (l: itineraire list) = match l with
     	|[] -> ()
     	|e::r -> Printf.printf "it %d: " e#get_numero; e#afficher_itineraire; rec_afficher_itineraires r
@@ -306,11 +331,25 @@ module Tp2e22 : TP2E22 = struct
    (* -- À IMPLANTER (12 PTS) -------------------------------------------------*)
    (* @Méthode : afficher_plan_distribution2: string -> string -> unit         *)
    (* @Description : Affiche le plan dans une image jpg (voir énoncé)          *)
-   (* @Exception: Lance l'exception Failure si le plan est vide                *)
-
+    (* @Exception: Lance l'exception Failure si le plan est vide                *)
+    
+    (*lance exception si plan vide, sinon on ecrit le plan dans le fichier plan.dot selon
+     le format que graphviz sait lire et ensuite on genere une image du graph avec la commande
+     de graphviz.*)
     method afficher_plan_distribution2 (file: string) (image: string) =
-		()
-
+      if (self#get_liste_itineraires = []) then failwith "Le plan est vide.";
+      (*creationn du fichier plan.dot*)
+      let oc = open_out file in
+    	let rec rec_traitement l =
+    	match l with
+        |[] -> ()
+        |e::r -> Printf.fprintf oc "%s" (self#fichier_itineraire e#get_liste_clients); rec_traitement r in
+        Printf.fprintf oc "digraph G { \n";
+        rec_traitement self#get_liste_itineraires;
+        Printf.fprintf oc "}";
+        close_out oc;
+        (*on gere l'image avec la commande ci-dessous et on utilise ignore pour respecter la signature,
+         puisque Sys.command retoune un int.*)
+        ignore (Sys.command (Printf.sprintf "dot -Tjpg -o%s %s" image file))
   end
-
 end
